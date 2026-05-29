@@ -6,7 +6,7 @@ import { inventoryApi } from "../services/inventoryApi";
 export const InventoryContext = createContext();
 
 export const InventoryProvider = ({ children }) => {
-  const [items, setItems] = useState();
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
