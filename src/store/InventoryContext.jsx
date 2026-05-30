@@ -10,7 +10,8 @@ export const InventoryProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Використання useCallback запобігає зайвим перемальовуванням компонента
+  // БАГ ВИПРАВЛЕНО: useCallback БЕЗ масиву залежностей [] створював нову функцію
+  // при кожному рендері → useEffect запускався нескінченно (infinite loop)
   const fetchItems = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -18,25 +19,21 @@ export const InventoryProvider = ({ children }) => {
       const data = await inventoryApi.getAll();
       setItems(data);
     } catch (err) {
-      // Обробка стану помилки
       setError(
         "Не вдалося завантажити інвентар. Перевірте з'єднання з сервером.",
       );
     } finally {
-      // Цей блок виконається в будь-якому випадку, знімаючи стан завантаження
       setLoading(false);
     }
-  });
+  }, []); // <-- [] означає: функція створюється лише один раз
 
-  // Первинне завантаження даних при монтуванні провайдера
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
-  // Метод для примусового оновлення даних після операцій CRUD
-  const refreshInventory = () => {
+  const refreshInventory = useCallback(() => {
     fetchItems();
-  };
+  }, [fetchItems]);
 
   return (
     <InventoryContext.Provider

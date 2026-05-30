@@ -1,38 +1,36 @@
 import { useState, useEffect } from "react";
 
 export const useFavorites = () => {
-  // Ініціалізація стану з перевіркою наявності даних у localStorage
   const [favorites, setFavorites] = useState(() => {
     try {
-      const savedFavorites = localStorage.getItem("inventory_favorites");
-      return savedFavorites ? JSON.parse(savedFavorites) : [];
+      const saved = localStorage.getItem("inventory_favorites");
+      return saved ? JSON.parse(saved) : [];
     } catch (error) {
-      console.error("Помилка парсингу localStorage", error);
-      return;
+      console.error("Помилка парсингу localStorage:", error);
+      // БАГ ВИПРАВЛЕНО: return; → повертав undefined замість [],
+      // тоді favorites = undefined → .find(), .filter(), .some(), .length → TypeError crash
+      return [];
     }
   });
 
-  // Синхронізація стану з localStorage при кожній зміні масиву favorites
   useEffect(() => {
     localStorage.setItem("inventory_favorites", JSON.stringify(favorites));
   }, [favorites]);
 
   const addFavorite = (item) => {
     if (!favorites.find((fav) => fav.id === item.id)) {
-      setFavorites([...favorites, item]);
+      setFavorites((prev) => [...prev, item]);
     }
   };
 
   const removeFavorite = (id) => {
-    setFavorites(favorites.filter((fav) => fav.id !== id));
+    setFavorites((prev) => prev.filter((fav) => fav.id !== id));
   };
 
-  // Метод для перевірки статусу (використовується для рендерингу іконки сердечка)
   const isFavorite = (id) => {
     return favorites.some((fav) => fav.id === id);
   };
 
-  // Метод-перемикач для зручного використання на кнопці
   const toggleFavorite = (item) => {
     if (isFavorite(item.id)) {
       removeFavorite(item.id);

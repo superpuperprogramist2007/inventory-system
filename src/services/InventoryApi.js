@@ -1,28 +1,35 @@
-// src/services/inventoryApi.js
 import axios from "axios";
 
-// Конфігурація базового URL. Під час розробки він зазвичай вказує на локальний сервер.
-const API_URL = "http://localhost:8000/api";
+const API_URL = "/api";
 
 const apiClient = axios.create({
   baseURL: API_URL,
 });
 
+// Допоміжна функція: конструює URL фотографії з id позиції.
+// API сервує фото за GET /inventory/:id/photo, але у відповіді getAll()
+// може не бути поля photoUrl → будуємо його самостійно.
+const buildPhotoUrl = (id) => `${API_URL}/inventory/${id}/photo`;
+
 export const inventoryApi = {
-  // Отримання повного списку інвентарю
   getAll: async () => {
     const response = await apiClient.get("/inventory");
-    return response.data;
+    // Додаємо поле photoUrl до кожного елемента для використання в UI
+    return response.data.map((item) => ({
+      ...item,
+      photoUrl: item.photoUrl || buildPhotoUrl(item.id),
+    }));
   },
 
-  // Запит детальної інформації за ідентифікатором
   getById: async (id) => {
     const response = await apiClient.get(`/inventory/${id}`);
-    return response.data;
+    const item = response.data;
+    return {
+      ...item,
+      photoUrl: item.photoUrl || buildPhotoUrl(item.id),
+    };
   },
 
-  // Створення нового запису за допомогою POST /register
-  // Використовується об'єкт FormData браузера для передачі файлів
   create: async (formData) => {
     const response = await apiClient.post("/register", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -30,7 +37,6 @@ export const inventoryApi = {
     return response.data;
   },
 
-  // Оновлення текстових полів (JSON)
   updateText: async (id, data) => {
     const response = await apiClient.put(`/inventory/${id}`, data, {
       headers: { "Content-Type": "application/json" },
@@ -38,7 +44,6 @@ export const inventoryApi = {
     return response.data;
   },
 
-  // Ізольоване оновлення фотографії (Multipart)
   updatePhoto: async (id, formData) => {
     const response = await apiClient.put(`/inventory/${id}/photo`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -46,7 +51,6 @@ export const inventoryApi = {
     return response.data;
   },
 
-  // Видалення об'єкта
   delete: async (id) => {
     const response = await apiClient.delete(`/inventory/${id}`);
     return response.data;

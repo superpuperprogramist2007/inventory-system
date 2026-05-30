@@ -8,30 +8,30 @@ import { inventoryApi } from "../../services/inventoryApi";
 const AdminInventory = () => {
   const { items, loading, error, refreshInventory } =
     useContext(InventoryContext);
-  const [setDeleteId] = useState(null);
+
+  // БАГ ВИПРАВЛЕНО: const [setDeleteId] = useState(null)
+  // деструктурувало лише сеттер, а deleteId ніколи не оголошувався як змінна →
+  // confirmDelete використовував deleteId = undefined → ReferenceError
+  const [deleteId, setDeleteId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Функція перехоплює намір користувача видалити об'єкт
   const handleDeleteRequest = (id) => {
     setDeleteId(id);
     setIsModalOpen(true);
   };
 
-  // Фактичне виконання запиту DELETE
   const confirmDelete = async () => {
     try {
       await inventoryApi.delete(deleteId);
-      refreshInventory(); // Оновлення глобального стану після мутації
+      refreshInventory();
     } catch (err) {
       alert("Виникла критична помилка під час видалення позиції.");
     } finally {
-      // Закриття модального вікна незалежно від результату
       setIsModalOpen(false);
       setDeleteId(null);
     }
   };
 
-  // Відображення стану завантаження (Loading state)
   if (loading)
     return (
       <div className="flex flex-col items-center justify-center mt-20">
@@ -42,7 +42,6 @@ const AdminInventory = () => {
       </div>
     );
 
-  // Відображення стану помилки (Error state)
   if (error)
     return (
       <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm mt-10">
@@ -75,7 +74,6 @@ const AdminInventory = () => {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
           >
             <path
               strokeLinecap="round"
@@ -89,14 +87,12 @@ const AdminInventory = () => {
       </div>
 
       {items.length === 0 ? (
-        // Відображення порожнього стану (Empty state)
         <div className="text-center py-20 bg-white shadow-sm rounded-xl border-2 border-dashed border-gray-300">
           <svg
             className="mx-auto h-12 w-12 text-gray-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -116,7 +112,6 @@ const AdminInventory = () => {
         <InventoryTable items={items} onDelete={handleDeleteRequest} />
       )}
 
-      {/* Модальне вікно підтвердження монтується тут */}
       <ConfirmModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

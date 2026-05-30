@@ -1,50 +1,46 @@
 import { useState } from "react";
 
 const InventoryForm = ({ initialData, onSubmit, isEditMode }) => {
-  // Стан для текстових полів
   const [formData, setFormData] = useState({
     inventory_name: initialData?.inventory_name || "",
     description: initialData?.description || "",
   });
-  // Стан для об'єкта файлу
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [error, setError] = useState("");
 
-  // Обробник змін у текстових полях
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Обробник вибору файлу
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files;
+    // БАГ ВИПРАВЛЕНО: e.target.files → FileList (об'єкт-список), а не File.
+    // FileList не має властивості .type → умова завжди false → файл ніколи не зберігався
+    const selectedFile = e.target.files[0]; // <-- потрібен конкретний File об'єкт
     if (selectedFile && selectedFile.type.startsWith("image/")) {
       setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
       setError("");
     } else if (selectedFile) {
       setError("Будь ласка, оберіть файл зображення (jpg, png, тощо).");
-      e.target.value = null; // Скидання некоректного файлу
+      e.target.value = null;
     }
   };
 
-  // Обробник відправки форми
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Валідація обов'язкових полів на стороні клієнта
     if (!formData.inventory_name.trim()) {
       setError("Назва інвентарю є обов'язковим полем.");
       return;
     }
 
-    // Фото є обов'язковим при створенні, але опціональним при редагуванні
     if (!isEditMode && !file) {
       setError("Фотографія є обов'язковою для створення нової позиції.");
       return;
     }
 
     setError("");
-    // Передача зібраних даних до батьківського компонента
     onSubmit(formData, file);
   };
 
@@ -74,7 +70,6 @@ const InventoryForm = ({ initialData, onSubmit, isEditMode }) => {
           onChange={handleChange}
           className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
           placeholder="Введіть назву позиції..."
-          required
         />
       </div>
 
@@ -103,7 +98,9 @@ const InventoryForm = ({ initialData, onSubmit, isEditMode }) => {
         >
           Завантаження фотографії{" "}
           {isEditMode ? (
-            "(залиште порожнім, щоб зберегти поточну)"
+            <span className="text-gray-400 font-normal text-sm">
+              (залиште порожнім, щоб зберегти поточну)
+            </span>
           ) : (
             <span className="text-red-500">*</span>
           )}
@@ -115,7 +112,19 @@ const InventoryForm = ({ initialData, onSubmit, isEditMode }) => {
           onChange={handleFileChange}
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer"
         />
-        {initialData?.photoUrl && !file && (
+        {/* Прев'ю нового обраного файлу */}
+        {preview && (
+          <div className="mt-4 flex items-center space-x-4">
+            <span className="text-sm text-gray-500">Нове фото:</span>
+            <img
+              src={preview}
+              alt="Прев'ю"
+              className="h-16 w-16 object-cover rounded-lg border border-blue-300 shadow"
+            />
+          </div>
+        )}
+        {/* Прев'ю поточного фото при редагуванні (якщо новий файл не обрано) */}
+        {initialData?.photoUrl && !preview && (
           <div className="mt-4 flex items-center space-x-4">
             <span className="text-sm text-gray-500">Поточне фото:</span>
             <img

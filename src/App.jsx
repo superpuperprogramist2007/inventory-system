@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 // Імпортуємо загальний макет сторінки (наприклад, з навігаційним меню Navbar)
 import Layout from "./components/common/Layout";
-
+import AdminInventoryDetails from "./pages/admin/AdminInventoryDetails.jsx";
 // Імпортуємо компоненти з папки gallery (Клієнтський розділ)
 import Gallery from "./pages/gallery/Gallery";
 import Favorites from "./pages/gallery/Favorites";
@@ -22,7 +22,7 @@ function App() {
           <Route index element={<Gallery />} />
           {/* Відкриється за адресою "/favorites" */}
           <Route path="favorites" element={<Favorites />} />
-
+          <Route path="details/:id" element={<AdminInventoryDetails />} />
           {/* ----- МАРШРУТИ АДМІНІСТРАТИВНОГО РОЗДІЛУ ----- */}
           {/* Вкладений роутинг: всі дочірні шляхи автоматично отримають префікс "/admin" */}
           <Route path="admin">
